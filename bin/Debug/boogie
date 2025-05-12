@@ -1,0 +1,2 @@
+#!/bin/bash
+dotnet ~/Desktop/verisol/bin/Debug/boogie-build/Source/BoogieDriver/bin/Release/net8.0/BoogieDriver.dll "$@"
