@@ -22,3 +22,4 @@
 /home/hamoud/Desktop/verisol/obj/Debug/net9.0/VeriSol/Debug/VeriSol.pdb
 /home/hamoud/Desktop/verisol/obj/Debug/net9.0/VeriSol/Debug/VeriSol.genruntimeconfig.cache
 /home/hamoud/Desktop/verisol/obj/Debug/net9.0/VeriSol/Debug/ref/VeriSol.dll
+/home/hamoud/Desktop/verisol/obj/Debug/net9.0/VeriSol/Debug/VeriSol.sourcelink.json

@@ -50,8 +50,8 @@ namespace VeriSolRunner
                     entryPointContractName,
                     recursionBound,
                     ignoredMethods,
-                    tryRefutation,
-                    tryProofFlag,
+                    tryRefutation :true,
+                    tryProofFlag :true,
                     logger,
                     printTransactionSequence,
                     translatorFlags);

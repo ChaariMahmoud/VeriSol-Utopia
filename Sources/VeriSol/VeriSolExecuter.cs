@@ -45,7 +45,22 @@ namespace VeriSolRunner
             this.SolidityFileDir = Path.GetDirectoryName(solidityFilePath);
             Console.WriteLine($"SpecFilesDir = {SolidityFileDir}");
             this.CorralPath = ExternalToolsManager.Corral.Command;
+            if (string.IsNullOrWhiteSpace(this.CorralPath))
+{
+    this.CorralPath = "/home/hamoud/Desktop/verisol/bin/Debug/corral";
+    Console.WriteLine("✅ Correction manuelle : CorralPath défini manuellement.");
+}
+else
+{
+    Console.WriteLine($"🔍 Corral détecté automatiquement : {this.CorralPath}");
+}
+
             this.BoogiePath = ExternalToolsManager.Boogie.Command;
+            if (string.IsNullOrWhiteSpace(this.BoogiePath))
+{
+    this.BoogiePath = "/home/hamoud/Desktop/verisol/bin/Debug/boogie";
+    Console.WriteLine("✅ Correction manuelle : BoogiePath défini manuellement.");
+}
             this.SolcPath = ExternalToolsManager.Solc.Command;
             this.CorralRecursionLimit = corralRecursionLimit;
             this.ignoreMethods = new HashSet<Tuple<string, string>>(ignoreMethods);
@@ -55,70 +70,79 @@ namespace VeriSolRunner
             this.printTransactionSequence = _printTransactionSequence;
             //this.GenInlineAttrs = genInlineAttrs;
             this.translatorFlags = _translatorFlags;
+            Console.WriteLine($"🔍 Chemin Boogie configuré : {this.BoogiePath}");
+
         }
 
-        public int Execute()
+public int Execute()
+{
+    // call SolToBoogie on specFilePath
+    if (!ExecuteSolToBoogie())
+    {
+        return 1;
+    }
+
+    // Phase Boogie
+    if (TryProof && FindProof())
+    {
+        return 0;
+    }
+
+    // Phase Corral
+    if (TryRefutation)
+    {
+        Console.WriteLine("🔄 Passage à la phase de réfutation avec Corral...");
+        if (RunCorralForRefutation())
         {
-            // call SolToBoogie on specFilePath
-            if (!ExecuteSolToBoogie())
-            {
-                return 1;
-            }
-
-            // try to prove first
-            if (TryProof && FindProof())
-            {
-                return 0;
-            }
-
-            // run Corral on outFile
-            if (TryRefutation && !RunCorralForRefutation())
-            {
-                return 1;
-            }
-
+            Console.WriteLine("✅ Refutation Corral réussie (contre-exemple trouvé).");
             return 0;
         }
-
-        private bool FindProof()
+        else
         {
-            var boogieArgs = new List<string>
-            {
-                //-doModSetAnalysis -inline:spec (was assert) -noinfer -contractInfer -proc:BoogieEntry_* out.bpl
-                //
-                $"-doModSetAnalysis",
-                $"-inline:spec", //was assert to before to fail when reaching recursive functions
-                $"-noinfer",
-                translatorFlags.PerformContractInferce? $"-contractInfer" : "",
-                $"-inlineDepth:{translatorFlags.InlineDepthForBoogie}", //contractInfer can perform inlining as well
-                // main method
-                $"-proc:BoogieEntry_*",
-                // Boogie file
-                outFileName
-            };
-
-            var boogieArgString = string.Join(" ", boogieArgs);
-            Console.WriteLine($"... running {BoogiePath} {boogieArgString}");
-            var boogieOut = RunBinary(BoogiePath, boogieArgString);
-            var boogieOutFile = "boogie.txt";
-            using (var bFile = new StreamWriter(boogieOutFile))
-            {
-                bFile.Write(boogieOut);
-            }
-            // Console.WriteLine($"\tFinished Boogie, output in {boogieOutFile}....\n");
-
-            // compare Corral output against expected output
-            if (CompareBoogieOutput(boogieOut))
-            {
-                Console.WriteLine($"\t*** Proof found! Formal Verification successful! (see {boogieOutFile})");
-                return true;
-            }
-            else
-            {
-                Console.WriteLine($"\t*** Did not find a proof (see {boogieOutFile})");
-                return false;
-            }
+            Console.WriteLine("❌ Corral n’a pas trouvé de contre-exemple.");
+            return 1;
         }
+    }
+
+    return 0;
+}
+
+
+
+private bool FindProof()
+{
+    var boogieArgs = new List<string>
+    {
+        // ✅ Ne pas inclure les options non supportées par Boogie 3.5.1.0
+        $"-inline:spec", // Utilisé pour l'inlining des specs, compatible
+        $"-inlineDepth:{translatorFlags.InlineDepthForBoogie}",
+        $"-proc:BoogieEntry_*",
+        outFileName
+    };
+
+    var boogieArgString = string.Join(" ", boogieArgs);
+    Console.WriteLine($"... running {BoogiePath} {boogieArgString}");
+    var boogieOut = RunBinary(BoogiePath, boogieArgString);
+    Console.WriteLine("Boogie.Command = " + BoogiePath);
+
+    var boogieOutFile = "boogie.txt";
+    using (var bFile = new StreamWriter(boogieOutFile))
+    {
+        bFile.Write(boogieOut);
+    }
+
+    if (CompareBoogieOutput(boogieOut))
+    {
+        Console.WriteLine($"\t*** Proof found! Formal Verification successful! (see {boogieOutFile})");
+        return true;
+    }
+    else
+    {
+        Console.WriteLine($"\t*** Did not find a proof (see {boogieOutFile})");
+        return false;
+    }
+}
+
 
         private bool RunCorralForRefutation()
         {
@@ -139,6 +163,7 @@ namespace VeriSolRunner
             var corralArgString = string.Join(" ", corralArgs);
             Console.WriteLine($"... running {CorralPath} {corralArgString}");
             var corralOut = RunBinary(CorralPath, corralArgString);
+            Console.WriteLine($"... running {CorralPath} {corralArgString}");
             var corralOutFile = "corral.txt";
             using (var bFile = new StreamWriter(corralOutFile))
             {
@@ -389,32 +414,43 @@ namespace VeriSolRunner
             return true;
         }
 
-        private string RunBinary(string cmdName, string arguments)
-        {
-            Process p = new Process();
-            p.StartInfo.UseShellExecute = false;
-            p.StartInfo.RedirectStandardInput = false;
-            p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.RedirectStandardError = true;
-            p.StartInfo.CreateNoWindow = true;
-            p.StartInfo.FileName = cmdName;
-            p.StartInfo.Arguments = $"{arguments}";
-            p.Start();
+private string RunBinary(string cmdName, string arguments)
+{
+    if (string.IsNullOrWhiteSpace(cmdName))
+    {
+        Console.WriteLine("❌ ERREUR : Le chemin de la commande (cmdName) est vide !");
+        Console.WriteLine($"Arguments fournis : {arguments}");
+        throw new InvalidOperationException("Le chemin vers l'exécutable est vide. Vérifiez ExternalToolsManager.");
+    }
+    else
+    {
+        Console.WriteLine($"✅ Lancement de la commande : {cmdName} {arguments}");
+    }
 
-            string outputBinary = p.StandardOutput.ReadToEnd();
-            string errorMsg = p.StandardError.ReadToEnd();
-            if (!String.IsNullOrEmpty(errorMsg))
-            {
-                Console.WriteLine($"Error: {errorMsg}");
-            }
-            p.StandardOutput.Close();
-            p.StandardError.Close();
+    Process p = new Process();
+    p.StartInfo.UseShellExecute = false;
+    p.StartInfo.RedirectStandardInput = false;
+    p.StartInfo.RedirectStandardOutput = true;
+    p.StartInfo.RedirectStandardError = true;
+    p.StartInfo.CreateNoWindow = true;
+    p.StartInfo.FileName = cmdName;
+    p.StartInfo.Arguments = $"{arguments}";
+    p.Start();
 
-            // TODO: should set up a timeout here
-            // but it seems there is a problem if we execute corral using mono
+    string outputBinary = p.StandardOutput.ReadToEnd();
+    string errorMsg = p.StandardError.ReadToEnd();
 
-            return outputBinary;
-        }
+    if (!String.IsNullOrEmpty(errorMsg))
+    {
+        Console.WriteLine($"🔴 STDERR de {cmdName} : {errorMsg}");
+    }
+
+    p.StandardOutput.Close();
+    p.StandardError.Close();
+
+    return outputBinary;
+}
+
 
         private bool CompareCorralOutput(string expected, string actual)
         {

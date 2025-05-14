@@ -12,3 +12,4 @@
 /home/hamoud/Desktop/verisol/obj/Debug/net9.0/BoogieAST/Debug/BoogieAST.pdb
 /home/hamoud/Desktop/verisol/obj/Debug/net9.0/BoogieAST/Debug/BoogieAST.genruntimeconfig.cache
 /home/hamoud/Desktop/verisol/obj/Debug/net9.0/BoogieAST/Debug/ref/BoogieAST.dll
+/home/hamoud/Desktop/verisol/obj/Debug/net9.0/BoogieAST/Debug/BoogieAST.sourcelink.json
