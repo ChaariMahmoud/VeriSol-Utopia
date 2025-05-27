@@ -372,6 +372,19 @@
         "runtime": {
           "bin/placeholder/SolToBoogie.dll": {}
         }
+      },
+      "WasmToBoogie/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "BoogieAST": "0.1.1-alpha"
+        },
+        "compile": {
+          "bin/placeholder/WasmToBoogie.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/WasmToBoogie.dll": {}
+        }
       }
     }
   },
@@ -723,6 +736,11 @@
       "type": "project",
       "path": "../SolToBoogie/SolToBoogie.csproj",
       "msbuildProject": "../SolToBoogie/SolToBoogie.csproj"
+    },
+    "WasmToBoogie/1.0.0": {
+      "type": "project",
+      "path": "../WasmToBoogie/WasmToBoogie.csproj",
+      "msbuildProject": "../WasmToBoogie/WasmToBoogie.csproj"
     }
   },
   "projectFileDependencyGroups": {
@@ -736,7 +754,8 @@
       "Microsoft.Extensions.Logging >= 3.1.3",
       "Microsoft.Extensions.Logging.Console >= 3.1.3",
       "SolToBoogie >= 0.1.1-alpha",
-      "SolidityAST >= 0.1.1-alpha"
+      "SolidityAST >= 0.1.1-alpha",
+      "WasmToBoogie >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -776,6 +795,9 @@
             },
             "/home/hamoud/Desktop/verisol/Sources/SolidityAST/SolidityAST.csproj": {
               "projectPath": "/home/hamoud/Desktop/verisol/Sources/SolidityAST/SolidityAST.csproj"
+            },
+            "/home/hamoud/Desktop/verisol/Sources/WasmToBoogie/WasmToBoogie.csproj": {
+              "projectPath": "/home/hamoud/Desktop/verisol/Sources/WasmToBoogie/WasmToBoogie.csproj"
             }
           }
         }

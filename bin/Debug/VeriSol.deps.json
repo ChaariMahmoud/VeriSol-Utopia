@@ -17,7 +17,8 @@
           "Microsoft.Extensions.Logging": "3.1.3",
           "Microsoft.Extensions.Logging.Console": "3.1.3",
           "SolToBoogie": "0.1.1-alpha",
-          "SolidityAST": "0.1.1-alpha"
+          "SolidityAST": "0.1.1-alpha",
+          "WasmToBoogie": "1.0.0"
         },
         "runtime": {
           "VeriSol.dll": {}
@@ -292,6 +293,17 @@
             "fileVersion": "0.1.1.0"
           }
         }
+      },
+      "WasmToBoogie/1.0.0": {
+        "dependencies": {
+          "BoogieAST": "0.1.1-alpha"
+        },
+        "runtime": {
+          "WasmToBoogie.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
       }
     }
   },
@@ -455,6 +467,11 @@
       "sha512": ""
     },
     "SolToBoogie/0.1.1-alpha": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "WasmToBoogie/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

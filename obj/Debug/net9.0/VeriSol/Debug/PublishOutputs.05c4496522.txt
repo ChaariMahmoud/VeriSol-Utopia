@@ -35,8 +35,10 @@
 /home/hamoud/Desktop/verisol/bin/Debug/publish/SolidityAnalysis.dll
 /home/hamoud/Desktop/verisol/bin/Debug/publish/SolidityAST.dll
 /home/hamoud/Desktop/verisol/bin/Debug/publish/SolToBoogie.dll
+/home/hamoud/Desktop/verisol/bin/Debug/publish/WasmToBoogie.dll
 /home/hamoud/Desktop/verisol/bin/Debug/publish/ExternalToolsManager.pdb
 /home/hamoud/Desktop/verisol/bin/Debug/publish/SolidityAST.pdb
 /home/hamoud/Desktop/verisol/bin/Debug/publish/BoogieAST.pdb
 /home/hamoud/Desktop/verisol/bin/Debug/publish/SolToBoogie.pdb
 /home/hamoud/Desktop/verisol/bin/Debug/publish/SolidityAnalysis.pdb
+/home/hamoud/Desktop/verisol/bin/Debug/publish/WasmToBoogie.pdb

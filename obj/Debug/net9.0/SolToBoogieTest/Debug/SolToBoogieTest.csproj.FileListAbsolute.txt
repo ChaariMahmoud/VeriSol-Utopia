@@ -15,10 +15,10 @@
 /home/hamoud/Desktop/verisol/obj/Debug/net9.0/SolToBoogieTest/Debug/SolToBoogieTest.AssemblyInfoInputs.cache
 /home/hamoud/Desktop/verisol/obj/Debug/net9.0/SolToBoogieTest/Debug/SolToBoogieTest.AssemblyInfo.cs
 /home/hamoud/Desktop/verisol/obj/Debug/net9.0/SolToBoogieTest/Debug/SolToBoogieTest.csproj.CoreCompileInputs.cache
+/home/hamoud/Desktop/verisol/obj/Debug/net9.0/SolToBoogieTest/Debug/SolToBoogieTest.sourcelink.json
 /home/hamoud/Desktop/verisol/obj/Debug/net9.0/SolToBoogieTest/Debug/SolToBoo.95A06AF1.Up2Date
 /home/hamoud/Desktop/verisol/obj/Debug/net9.0/SolToBoogieTest/Debug/SolToBoogieTest.dll
 /home/hamoud/Desktop/verisol/obj/Debug/net9.0/SolToBoogieTest/Debug/refint/SolToBoogieTest.dll
 /home/hamoud/Desktop/verisol/obj/Debug/net9.0/SolToBoogieTest/Debug/SolToBoogieTest.pdb
 /home/hamoud/Desktop/verisol/obj/Debug/net9.0/SolToBoogieTest/Debug/SolToBoogieTest.genruntimeconfig.cache
 /home/hamoud/Desktop/verisol/obj/Debug/net9.0/SolToBoogieTest/Debug/ref/SolToBoogieTest.dll
-/home/hamoud/Desktop/verisol/obj/Debug/net9.0/SolToBoogieTest/Debug/SolToBoogieTest.sourcelink.json

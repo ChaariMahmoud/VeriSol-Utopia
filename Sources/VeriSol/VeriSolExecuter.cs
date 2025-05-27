@@ -18,7 +18,8 @@ namespace VeriSolRunner
     // using Microsoft.Boogie.ExprExtensions;
 
     internal class VeriSolExecutor
-    {
+{
+        
         private string SolidityFilePath;
         private string SolidityFileDir;
         private string ContractName;
@@ -37,6 +38,7 @@ namespace VeriSolRunner
         private HashSet<Tuple<string, string>> ignoreMethods;
         private TranslatorFlags translatorFlags;
         private bool printTransactionSequence = false; 
+        private BoogieProgram program = null;
 
         public VeriSolExecutor(string solidityFilePath, string contractName, int corralRecursionLimit, HashSet<Tuple<string, string>> ignoreMethods, bool tryRefutation, bool tryProofFlag, ILogger logger, bool _printTransactionSequence, TranslatorFlags _translatorFlags = null)
         {
@@ -74,39 +76,66 @@ else
 
         }
 
-public int Execute()
-{
-    // call SolToBoogie on specFilePath
-    if (!ExecuteSolToBoogie())
-    {
-        return 1;
-    }
-
-    // Phase Boogie
-    if (TryProof && FindProof())
-    {
-        return 0;
-    }
-
-    // Phase Corral
-    if (TryRefutation)
-    {
-        Console.WriteLine("🔄 Passage à la phase de réfutation avec Corral...");
-        if (RunCorralForRefutation())
+         // Constructor for WASM mode
+ public VeriSolExecutor(BoogieProgram program, string contractName, int corralRecursionLimit, HashSet<Tuple<string, string>> ignoreMethods, bool tryRefutation, bool tryProofFlag, ILogger logger)
         {
-            Console.WriteLine("✅ Refutation Corral réussie (contre-exemple trouvé).");
+            this.program = program;
+            this.ContractName = contractName;
+            this.CorralRecursionLimit = corralRecursionLimit;
+            this.ignoreMethods = new HashSet<Tuple<string, string>>(ignoreMethods);
+            this.Logger = logger;
+            this.TryProof = tryProofFlag;
+            this.TryRefutation = tryRefutation;
+            this.printTransactionSequence = false;
+            this.translatorFlags = new TranslatorFlags();
+            this.outFileName = "BoogieOutputs/wasmtoboogie.bpl";
+
+            this.CorralPath = "bin/Debug/corral";
+            Console.WriteLine("✅ Correction manuelle : CorralPath défini manuellement.");
+
+            this.BoogiePath = "bin/Debug/boogie";
+            Console.WriteLine("✅ Correction manuelle : BoogiePath défini manuellement.");
+        }
+
+        public int Execute()
+        {
+            if (this.program == null)
+            {
+                if (!ExecuteSolToBoogie())
+                    return 1;
+            }
+            else
+            {
+                Console.WriteLine($"📝 Écriture du programme Boogie dans {outFileName}");
+                using (var writer = new StreamWriter(outFileName))
+                {
+                    writer.WriteLine(this.program.ToString());
+
+                }
+            }
+
+            if (TryProof && FindProof())
+            {
+                return 0;
+            }
+
+            if (TryRefutation)
+            {
+                Console.WriteLine("🔄 Passage à la phase de réfutation avec Corral...");
+                if (RunCorralForRefutation())
+                {
+                    Console.WriteLine("✅ Refutation Corral réussie (contre-exemple trouvé).\n");
+                    return 0;
+                }
+                else
+                {
+                    Console.WriteLine("❌ Corral n’a pas trouvé de contre-exemple.\n");
+                    return 1;
+                }
+            }
+
             return 0;
         }
-        else
-        {
-            Console.WriteLine("❌ Corral n’a pas trouvé de contre-exemple.");
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
 
 
 private bool FindProof()
