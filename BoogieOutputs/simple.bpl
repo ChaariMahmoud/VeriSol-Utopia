@@ -1,7 +1,8 @@
 procedure BoogieEntry_simple();
 implementation BoogieEntry_simple()
 {
-assert (true);
+var tmp0: int;
+tmp0 := (2) + (1);
 }
 
 

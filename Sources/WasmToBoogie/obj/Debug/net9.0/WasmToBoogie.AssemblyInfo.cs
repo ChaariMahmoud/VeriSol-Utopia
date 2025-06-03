@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WasmToBoogie")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+913a924da543e835b1c865e2cd2bb59668a69bd0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+706642fb08def75b1b195a78d62e53f864deff67")]
 [assembly: System.Reflection.AssemblyProductAttribute("WasmToBoogie")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WasmToBoogie")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

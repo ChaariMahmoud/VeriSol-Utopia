@@ -79,22 +79,24 @@ else
          // Constructor for WASM mode
  public VeriSolExecutor(BoogieProgram program, string contractName, int corralRecursionLimit, HashSet<Tuple<string, string>> ignoreMethods, bool tryRefutation, bool tryProofFlag, ILogger logger)
         {
-            this.program = program;
-            this.ContractName = contractName;
-            this.CorralRecursionLimit = corralRecursionLimit;
-            this.ignoreMethods = new HashSet<Tuple<string, string>>(ignoreMethods);
-            this.Logger = logger;
-            this.TryProof = tryProofFlag;
-            this.TryRefutation = tryRefutation;
-            this.printTransactionSequence = false;
-            this.translatorFlags = new TranslatorFlags();
-            this.outFileName = "BoogieOutputs/wasmtoboogie.bpl";
+    this.program = program;
+    this.ContractName = contractName;
+    this.CorralRecursionLimit = corralRecursionLimit;
+    this.ignoreMethods = new HashSet<Tuple<string, string>>(ignoreMethods);
+    this.Logger = logger;
+    this.TryProof = tryProofFlag;
+    this.TryRefutation = tryRefutation;
+    this.printTransactionSequence = false;
+    this.translatorFlags = new TranslatorFlags();
 
-            this.CorralPath = "bin/Debug/corral";
-            Console.WriteLine("✅ Correction manuelle : CorralPath défini manuellement.");
+    var baseName = Path.GetFileNameWithoutExtension(contractName);
+    this.outFileName = $"BoogieOutputs/{baseName}.bpl";
 
-            this.BoogiePath = "bin/Debug/boogie";
-            Console.WriteLine("✅ Correction manuelle : BoogiePath défini manuellement.");
+    this.CorralPath = "bin/Debug/corral";
+    Console.WriteLine("✅ Correction manuelle : CorralPath défini manuellement.");
+
+    this.BoogiePath = "bin/Debug/boogie";
+    Console.WriteLine("✅ Correction manuelle : BoogiePath défini manuellement.");
         }
 
         public int Execute()

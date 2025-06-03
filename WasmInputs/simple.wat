@@ -1,5 +1,8 @@
 (module
   (func (export "main")
-    nop
+    (i32.const 1)
+    (i32.const 2)
+    i32.add
+    drop
   )
 )

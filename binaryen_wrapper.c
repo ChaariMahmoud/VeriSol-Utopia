@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <binaryen-c.h>
+#define EXPORT __attribute__((visibility("default")))
+
 
 // ✅ Charge un module WASM binaire
 BinaryenModuleRef LoadWasmTextFile(const char* filename) {
@@ -60,13 +62,41 @@ bool ValidateModule(BinaryenModuleRef module) {
     return BinaryenModuleValidate(module);
 }
 
-// 🧪 Exemple d'une future fonction utile (à implémenter au besoin)
-// const char* GetNthFunctionName(BinaryenModuleRef module, int index) {
-//     if (index < BinaryenGetNumFunctions(module)) {
-//         BinaryenFunctionRef func = BinaryenGetFunctionByIndex(module, index);
-//         return BinaryenFunctionGetName(func);
-//     }
-//     return "";
-// }
+// ✅ Récupère le corps d'une fonction (expression racine)
+BinaryenExpressionRef GetFunctionBody(BinaryenModuleRef module, int index) {
+    if (index >= BinaryenGetNumFunctions(module)) return NULL;
+    BinaryenFunctionRef func = BinaryenGetFunctionByIndex(module, index);
+    return BinaryenFunctionGetBody(func);
+}
 
-// TODO : Ajouter des getters pour locals, globals, memories si besoin
+// ✅ Récupère l'identifiant (type) d'une expression
+int GetExpressionId(BinaryenExpressionRef expr) {
+    return BinaryenExpressionGetId(expr);
+}
+
+// ✅ Retourne le corps WAT d'une fonction sous forme de chaîne
+
+
+EXPORT const char* GetFunctionBodyText(BinaryenModuleRef module, int index) {
+    if (index >= BinaryenGetNumFunctions(module)) return "";
+
+    BinaryenFunctionRef func = BinaryenGetFunctionByIndex(module, index);
+    if (!func) return "";
+
+    BinaryenExpressionRef body = BinaryenFunctionGetBody(func);
+    if (!body) return "";
+
+    // On crée un nouveau module temporaire pour encapsuler le corps
+    BinaryenModuleRef tempMod = BinaryenModuleCreate();
+    BinaryenExpressionRef copied = BinaryenExpressionCopy(body, tempMod);
+
+
+    BinaryenAddFunction(tempMod, "temp", BinaryenTypeNone(), BinaryenTypeNone(), NULL, 0, copied);
+
+    char* wat = BinaryenModuleAllocateAndWriteText(tempMod);
+    char* result = strdup(wat); // Important : faire une copie persistante
+    free(wat);
+    BinaryenModuleDispose(tempMod);
+    return result;
+}
+

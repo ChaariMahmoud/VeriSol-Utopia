@@ -16,42 +16,70 @@ namespace WasmToBoogie.Parser
             this.filePath = filePath;
         }
 
-        public WasmModule Parse()
+public WasmModule Parse()
+{
+    if (!File.Exists(filePath))
+        throw new FileNotFoundException($"❌ Fichier WAT introuvable : {filePath}");
+
+    Console.WriteLine("📖 Lecture du fichier WAT : " + filePath);
+    Console.WriteLine("🔄 Conversion WAT → WASM via wat2wasm...");
+    string wasmPath = ConvertWatToWasm(filePath);
+
+    Console.WriteLine("🔄 Appel à Binaryen (via wrapper) pour extraire l'AST WAT...");
+    IntPtr modulePtr = LoadWasmTextFile(wasmPath);
+    if (modulePtr == IntPtr.Zero)
+        throw new Exception("❌ Échec de lecture du fichier WASM avec Binaryen.");
+
+    if (!ValidateModule(modulePtr))
+        throw new Exception("❌ Le module Binaryen est invalide !");
+
+    PrintModuleAST(modulePtr);
+
+    int funcCount = GetFunctionCount(modulePtr);
+    string firstFuncName = Marshal.PtrToStringAnsi(GetFirstFunctionName(modulePtr));
+
+    Console.WriteLine($"✅ AST généré : {funcCount} fonction(s)");
+    Console.WriteLine($"🧠 Première fonction : {firstFuncName}");
+
+    var module = new WasmModule();
+
+    string watBody = GetFunctionBodyWat(modulePtr, 0);
+    Console.WriteLine("📤 Corps extrait de la fonction :\n" + watBody);
+
+    // 🔍 Extraire les instructions WAT en respectant l’ordre d'exécution
+    var bodyList = new List<string>();
+    var tokens = watBody.Split(new[] { '(', ')', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+
+    foreach (var raw in tokens)
+    {
+        string line = raw.Trim();
+
+        if (line.StartsWith("i32.const"))
         {
-            if (!File.Exists(filePath))
-                throw new FileNotFoundException($"❌ Fichier WAT introuvable : {filePath}");
-
-            Console.WriteLine("📖 Lecture du fichier WAT : " + filePath);
-            Console.WriteLine("🔄 Conversion WAT → WASM via wat2wasm...");
-            string wasmPath = ConvertWatToWasm(filePath);
-
-            Console.WriteLine("🔄 Appel à Binaryen (via wrapper) pour extraire l'AST WAT...");
-            IntPtr modulePtr = LoadWasmTextFile(wasmPath);
-            if (modulePtr == IntPtr.Zero)
-                throw new Exception("❌ Échec de lecture du fichier WASM avec Binaryen.");
-
-            if (!ValidateModule(modulePtr))
-                throw new Exception("❌ Le module Binaryen est invalide !");
-
-            // 🌳 Affiche l’AST généré (WAT pretty-printed par Binaryen)
-            PrintModuleAST(modulePtr);
-
-            // 🧠 Extraire les informations de base
-            int funcCount = GetFunctionCount(modulePtr);
-            string firstFuncName = Marshal.PtrToStringAnsi(GetFirstFunctionName(modulePtr));
-
-            Console.WriteLine($"✅ AST simulé généré avec Binaryen : {funcCount} fonction(s)");
-            Console.WriteLine($"🧠 Première fonction : {firstFuncName}");
-
-            // ✨ Retourne un AST simplifié
-            var module = new WasmModule();
-            module.Functions.Add(new WasmFunction
-            {
-                Body = new List<string> { $"(func ${firstFuncName})" }
-            });
-
-            return module;
+            bodyList.Add(line); // exemple : i32.const 4
         }
+        else if (line == "i32.add" || line == "drop")
+        {
+            bodyList.Add(line);
+        }
+    }
+
+    bodyList.Reverse(); // 🌀 Corriger l'ordre pour correspondre à la pile
+
+    foreach (var instr in bodyList)
+    {
+        Console.WriteLine("📦 Instruction extraite : " + instr);
+    }
+
+    module.Functions.Add(new WasmFunction
+    {
+        Body = bodyList
+    });
+
+    return module;
+}
+
+
 
         private string ConvertWatToWasm(string watPath)
         {
@@ -82,7 +110,13 @@ namespace WasmToBoogie.Parser
             return wasmPath;
         }
 
-        // 🔗 Fonctions importées depuis libbinaryenwrapper.so
+        private static string GetFunctionBodyWat(IntPtr module, int index)
+        {
+            IntPtr ptr = GetFunctionBodyText(module, index);
+            return Marshal.PtrToStringAnsi(ptr) ?? string.Empty;
+        }
+
+        // 🔗 Fonctions externes du wrapper
         [DllImport("libbinaryenwrapper", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr LoadWasmTextFile(string filename);
 
@@ -98,6 +132,9 @@ namespace WasmToBoogie.Parser
         [DllImport("libbinaryenwrapper", CallingConvention = CallingConvention.Cdecl)]
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool ValidateModule(IntPtr module);
+
+        [DllImport("libbinaryenwrapper", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr GetFunctionBodyText(IntPtr module, int index);
     }
 
     namespace Ast
