@@ -58,13 +58,13 @@ public WasmModule Parse()
         {
             bodyList.Add(line); // exemple : i32.const 4
         }
-        else if (line == "i32.add" || line == "drop")
+        else if (line == "i32.add" || line == "drop" ||line == "i32.sub" || line == "i32.mul" || line == "i32.div_s")
         {
             bodyList.Add(line);
         }
     }
 
-    bodyList.Reverse(); // 🌀 Corriger l'ordre pour correspondre à la pile
+  bodyList.Reverse(); // 🌀 Corriger l'ordre pour correspondre à la pile
 
     foreach (var instr in bodyList)
     {

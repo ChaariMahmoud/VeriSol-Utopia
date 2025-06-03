@@ -35,7 +35,6 @@ namespace WasmToBoogie.Conversion
             var locals = new List<BoogieVariable>();
             var body = new BoogieStmtList();
             var stack = new Stack<BoogieExpr>();
-
             int tempCounter = 0;
 
             string FreshTemp()
@@ -54,28 +53,30 @@ namespace WasmToBoogie.Conversion
                         stack.Push(litExpr);
                     }
                 }
-                else if (instr == "i32.add")
+                else if (instr == "i32.add" || instr == "i32.sub" || instr == "i32.mul" || instr == "i32.div_s")
                 {
                     if (stack.Count >= 2)
                     {
+                         var left = stack.Pop();
                         var right = stack.Pop();
-                        var left = stack.Pop();
+                       
 
-var tmpName = FreshTemp();
-var tmpIdent = new BoogieTypedIdent(tmpName, BoogieType.Int);
-var tmpVar = new BoogieLocalVariable(tmpIdent);
-locals.Add(tmpVar);
+                        var tmpName = FreshTemp();
+                        var tmpIdent = new BoogieTypedIdent(tmpName, BoogieType.Int);
+                        var tmpVar = new BoogieLocalVariable(tmpIdent);
+                        locals.Add(tmpVar);
 
-                        var addExpr = new BoogieBinaryOperation(
-                            BoogieBinaryOperation.Opcode.ADD,
-                            left,
-                            right
-                        );
+                        var opcode = instr switch
+                        {
+                            "i32.add" => BoogieBinaryOperation.Opcode.ADD,
+                            "i32.sub" => BoogieBinaryOperation.Opcode.SUB,
+                            "i32.mul" => BoogieBinaryOperation.Opcode.MUL,
+                            "i32.div_s" => BoogieBinaryOperation.Opcode.DIV,
+                            _ => throw new InvalidOperationException("Unknown binary opcode")
+                        };
 
-                        var assign = new BoogieAssignCmd(
-                            new BoogieIdentifierExpr(tmpName),
-                            addExpr
-                        );
+                        var binExpr = new BoogieBinaryOperation(opcode, left, right);
+                        var assign = new BoogieAssignCmd(new BoogieIdentifierExpr(tmpName), binExpr);
 
                         body.AddStatement(assign);
                         stack.Push(new BoogieIdentifierExpr(tmpName));
@@ -85,7 +86,7 @@ locals.Add(tmpVar);
                 {
                     if (stack.Count > 0)
                     {
-                        stack.Pop();
+                        stack.Pop(); // On ignore la valeur au sommet
                     }
                 }
                 else
