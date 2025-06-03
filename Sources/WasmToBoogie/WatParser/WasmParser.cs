@@ -16,70 +16,70 @@ namespace WasmToBoogie.Parser
             this.filePath = filePath;
         }
 
-public WasmModule Parse()
-{
-    if (!File.Exists(filePath))
-        throw new FileNotFoundException($"❌ Fichier WAT introuvable : {filePath}");
-
-    Console.WriteLine("📖 Lecture du fichier WAT : " + filePath);
-    Console.WriteLine("🔄 Conversion WAT → WASM via wat2wasm...");
-    string wasmPath = ConvertWatToWasm(filePath);
-
-    Console.WriteLine("🔄 Appel à Binaryen (via wrapper) pour extraire l'AST WAT...");
-    IntPtr modulePtr = LoadWasmTextFile(wasmPath);
-    if (modulePtr == IntPtr.Zero)
-        throw new Exception("❌ Échec de lecture du fichier WASM avec Binaryen.");
-
-    if (!ValidateModule(modulePtr))
-        throw new Exception("❌ Le module Binaryen est invalide !");
-
-    PrintModuleAST(modulePtr);
-
-    int funcCount = GetFunctionCount(modulePtr);
-    string firstFuncName = Marshal.PtrToStringAnsi(GetFirstFunctionName(modulePtr));
-
-    Console.WriteLine($"✅ AST généré : {funcCount} fonction(s)");
-    Console.WriteLine($"🧠 Première fonction : {firstFuncName}");
-
-    var module = new WasmModule();
-
-    string watBody = GetFunctionBodyWat(modulePtr, 0);
-    Console.WriteLine("📤 Corps extrait de la fonction :\n" + watBody);
-
-    // 🔍 Extraire les instructions WAT en respectant l’ordre d'exécution
-    var bodyList = new List<string>();
-    var tokens = watBody.Split(new[] { '(', ')', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-
-    foreach (var raw in tokens)
-    {
-        string line = raw.Trim();
-
-        if (line.StartsWith("i32.const"))
+        public WasmModule Parse()
         {
-            bodyList.Add(line); // exemple : i32.const 4
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException($"❌ Fichier WAT introuvable : {filePath}");
+
+            Console.WriteLine("📖 Lecture du fichier WAT : " + filePath);
+            Console.WriteLine("🔄 Conversion WAT → WASM via wat2wasm...");
+            string wasmPath = ConvertWatToWasm(filePath);
+
+            Console.WriteLine("🔄 Appel à Binaryen (via wrapper) pour extraire l'AST WAT...");
+            IntPtr modulePtr = LoadWasmTextFile(wasmPath);
+            if (modulePtr == IntPtr.Zero)
+                throw new Exception("❌ Échec de lecture du fichier WASM avec Binaryen.");
+
+            if (!ValidateModule(modulePtr))
+                throw new Exception("❌ Le module Binaryen est invalide !");
+
+            PrintModuleAST(modulePtr);
+
+            int funcCount = GetFunctionCount(modulePtr);
+            string firstFuncName = Marshal.PtrToStringAnsi(GetFirstFunctionName(modulePtr));
+
+            Console.WriteLine($"✅ AST généré : {funcCount} fonction(s)");
+            Console.WriteLine($"🧠 Première fonction : {firstFuncName}");
+
+            var module = new WasmModule();
+
+            string watBody = GetFunctionBodyWat(modulePtr, 0);
+            Console.WriteLine("📤 Corps extrait de la fonction :\n" + watBody);
+
+            // 🔍 Extraire les instructions WAT en respectant l’ordre d'exécution
+            var bodyList = new List<string>();
+            var tokens = watBody.Split(new[] { '(', ')', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var raw in tokens)
+            {
+                string line = raw.Trim();
+
+                if (line.StartsWith("i32.const"))
+                {
+                    bodyList.Add(line);
+                }
+                else if (
+                    line == "drop" ||
+                    line == "i32.add" || line == "i32.sub" || line == "i32.mul" || line == "i32.div_s" ||
+                    line == "i32.eq" || line == "i32.ne" || line == "i32.lt_s" || line == "i32.gt_s" ||
+                    line == "i32.le_s" || line == "i32.ge_s" || line == "i32.and" || line == "i32.or" 
+                )
+                {
+                    bodyList.Add(line);
+                }
+            }
+
+          bodyList.Reverse(); // 🌀 Corriger l'ordre pour correspondre à la pile
+
+            foreach (var instr in bodyList)
+            {
+                Console.WriteLine("📦 Instruction extraite : " + instr);
+            }
+
+            module.Functions.Add(new WasmFunction { Body = bodyList });
+
+            return module;
         }
-        else if (line == "i32.add" || line == "drop" ||line == "i32.sub" || line == "i32.mul" || line == "i32.div_s")
-        {
-            bodyList.Add(line);
-        }
-    }
-
-  bodyList.Reverse(); // 🌀 Corriger l'ordre pour correspondre à la pile
-
-    foreach (var instr in bodyList)
-    {
-        Console.WriteLine("📦 Instruction extraite : " + instr);
-    }
-
-    module.Functions.Add(new WasmFunction
-    {
-        Body = bodyList
-    });
-
-    return module;
-}
-
-
 
         private string ConvertWatToWasm(string watPath)
         {

@@ -1,11 +1,6 @@
-Prover error: ; :rlimit line: 32 position: 0
-
-Advisory: BoogieEntry_simple SKIPPED because of internal error: unexpected prover output: System.Exception: Request returned no response
-   at Microsoft.Boogie.SMTLib.SMTLibProcess.SendRequest(String request, CancellationToken cancellationToken) in /home/runner/work/boogie/boogie/Source/Provers/SMTLib/SMTLibProcess.cs:line 153
-   at Microsoft.Boogie.SMTLib.SMTLibInteractiveTheoremProver.CheckSatAndGetResponse(CancellationToken cancellationToken) in /home/runner/work/boogie/boogie/Source/Provers/SMTLib/SMTLibInteractiveTheoremProver.cs:line 524
-   at Microsoft.Boogie.SMTLib.SMTLibInteractiveTheoremProver.CheckSat(CancellationToken cancellationToken, Int32 errorLimit) in /home/runner/work/boogie/boogie/Source/Provers/SMTLib/SMTLibInteractiveTheoremProver.cs:line 212
-   at Microsoft.Boogie.SMTLib.SMTLibInteractiveTheoremProver.Check(String descriptiveName, VCExpr vc, ErrorHandler handler, Int32 errorLimit, CancellationToken cancellationToken) in /home/runner/work/boogie/boogie/Source/Provers/SMTLib/SMTLibInteractiveTheoremProver.cs:line 126
-   at Microsoft.Boogie.Checker.Check(String descriptiveName, VCExpr vc, CancellationToken cancellationToken) in /home/runner/work/boogie/boogie/Source/VCGeneration/Checker.cs:line 274
-BoogieOutputs/simple.bpl(2,16): Verification inconclusive (BoogieEntry_simple)
-
-Boogie program verifier finished with 0 verified, 0 errors, 1 inconclusive
+BoogieOutputs/simple.bpl(12,0): Error: mismatched types in assignment command (cannot assign bool to int)
+BoogieOutputs/simple.bpl(14,0): Error: mismatched types in assignment command (cannot assign bool to int)
+BoogieOutputs/simple.bpl(17,0): Error: mismatched types in assignment command (cannot assign bool to int)
+BoogieOutputs/simple.bpl(18,0): Error: mismatched types in assignment command (cannot assign bool to int)
+BoogieOutputs/simple.bpl(19,0): Error: mismatched types in assignment command (cannot assign bool to int)
+5 type checking errors detected in BoogieOutputs/simple.bpl

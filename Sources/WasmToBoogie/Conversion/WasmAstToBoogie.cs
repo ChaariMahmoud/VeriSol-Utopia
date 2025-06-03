@@ -37,10 +37,7 @@ namespace WasmToBoogie.Conversion
             var stack = new Stack<BoogieExpr>();
             int tempCounter = 0;
 
-            string FreshTemp()
-            {
-                return $"tmp{tempCounter++}";
-            }
+            string FreshTemp() => $"tmp{tempCounter++}";
 
             foreach (var instr in func.Body)
             {
@@ -49,21 +46,18 @@ namespace WasmToBoogie.Conversion
                     var valueStr = instr.Substring("i32.const".Length).Trim();
                     if (int.TryParse(valueStr, out int val))
                     {
-                        var litExpr = new BoogieLiteralExpr(val);
-                        stack.Push(litExpr);
+                        stack.Push(new BoogieLiteralExpr(val));
                     }
                 }
                 else if (instr == "i32.add" || instr == "i32.sub" || instr == "i32.mul" || instr == "i32.div_s")
                 {
                     if (stack.Count >= 2)
                     {
-                         var left = stack.Pop();
                         var right = stack.Pop();
-                       
+                        var left = stack.Pop();
 
                         var tmpName = FreshTemp();
-                        var tmpIdent = new BoogieTypedIdent(tmpName, BoogieType.Int);
-                        var tmpVar = new BoogieLocalVariable(tmpIdent);
+                        var tmpVar = new BoogieLocalVariable(new BoogieTypedIdent(tmpName, BoogieType.Int));
                         locals.Add(tmpVar);
 
                         var opcode = instr switch
@@ -72,22 +66,67 @@ namespace WasmToBoogie.Conversion
                             "i32.sub" => BoogieBinaryOperation.Opcode.SUB,
                             "i32.mul" => BoogieBinaryOperation.Opcode.MUL,
                             "i32.div_s" => BoogieBinaryOperation.Opcode.DIV,
-                            _ => throw new InvalidOperationException("Unknown binary opcode")
+                            _ => throw new InvalidOperationException("Unknown arithmetic opcode")
                         };
 
                         var binExpr = new BoogieBinaryOperation(opcode, left, right);
-                        var assign = new BoogieAssignCmd(new BoogieIdentifierExpr(tmpName), binExpr);
+                        body.AddStatement(new BoogieAssignCmd(new BoogieIdentifierExpr(tmpName), binExpr));
+                        stack.Push(new BoogieIdentifierExpr(tmpName));
+                    }
+                }
+                else if (instr == "i32.and" || instr == "i32.or")
+                {
+                    if (stack.Count >= 2)
+                    {
+                        var right = stack.Pop();
+                        var left = stack.Pop();
 
-                        body.AddStatement(assign);
+                        var leftBool = new BoogieBinaryOperation(BoogieBinaryOperation.Opcode.NEQ, left, new BoogieLiteralExpr(0));
+                        var rightBool = new BoogieBinaryOperation(BoogieBinaryOperation.Opcode.NEQ, right, new BoogieLiteralExpr(0));
+
+                        var tmpName = FreshTemp();
+                        var tmpVar = new BoogieLocalVariable(new BoogieTypedIdent(tmpName, BoogieType.Int));
+                        locals.Add(tmpVar);
+
+                        var opcode = instr == "i32.and" ? BoogieBinaryOperation.Opcode.AND : BoogieBinaryOperation.Opcode.OR;
+                        var logicExpr = new BoogieBinaryOperation(opcode, leftBool, rightBool);
+
+                        body.AddStatement(new BoogieAssignCmd(new BoogieIdentifierExpr(tmpName), logicExpr));
+                        stack.Push(new BoogieIdentifierExpr(tmpName));
+                    }
+                }
+                else if (instr == "i32.eq" || instr == "i32.ne" || instr == "i32.lt_s" ||
+                         instr == "i32.gt_s" || instr == "i32.le_s" || instr == "i32.ge_s")
+                {
+                    if (stack.Count >= 2)
+                    {
+                        var right = stack.Pop();
+                        var left = stack.Pop();
+
+                        var tmpName = FreshTemp();
+                        var tmpVar = new BoogieLocalVariable(new BoogieTypedIdent(tmpName, BoogieType.Int));
+                        locals.Add(tmpVar);
+
+                        var opcode = instr switch
+                        {
+                            "i32.eq" => BoogieBinaryOperation.Opcode.EQ,
+                            "i32.ne" => BoogieBinaryOperation.Opcode.NEQ,
+                            "i32.lt_s" => BoogieBinaryOperation.Opcode.LT,
+                            "i32.gt_s" => BoogieBinaryOperation.Opcode.GT,
+                            "i32.le_s" => BoogieBinaryOperation.Opcode.LE,
+                            "i32.ge_s" => BoogieBinaryOperation.Opcode.GE,
+                            _ => throw new InvalidOperationException("Unknown comparison opcode")
+                        };
+
+                        var cmpExpr = new BoogieBinaryOperation(opcode, left, right);
+                        body.AddStatement(new BoogieAssignCmd(new BoogieIdentifierExpr(tmpName), cmpExpr));
                         stack.Push(new BoogieIdentifierExpr(tmpName));
                     }
                 }
                 else if (instr == "drop")
                 {
                     if (stack.Count > 0)
-                    {
-                        stack.Pop(); // On ignore la valeur au sommet
-                    }
+                        stack.Pop();
                 }
                 else
                 {
@@ -97,8 +136,7 @@ namespace WasmToBoogie.Conversion
 
             if (stack.Count > 0)
             {
-                var top = stack.Peek();
-                body.AddStatement(new BoogieAssertCmd(top));
+                body.AddStatement(new BoogieAssertCmd(stack.Peek()));
             }
 
             var proc = new BoogieProcedure(
@@ -111,14 +149,7 @@ namespace WasmToBoogie.Conversion
                 new List<BoogieExpr>()
             );
 
-            var impl = new BoogieImplementation(
-                proc.Name,
-                inParams,
-                outParams,
-                locals,
-                body
-            );
-
+            var impl = new BoogieImplementation(proc.Name, inParams, outParams, locals, body);
             return (proc, impl);
         }
     }
